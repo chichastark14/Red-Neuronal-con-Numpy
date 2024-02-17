@@ -1,7 +1,7 @@
 #Moreno Santiago José Miguel
-#Fecha: 16 de febrero del 2024
-#Actualización: Implementar cross entropy
-#Se modificó lineas de código, el return de cost_derivative y pasó a llamarse CrossEntropy_derivative y en backprop se modificó delta para que fuera coherente
+#Fecha: 17 de febrero del 2024
+#Actualización: Nuevo Optimizador 
+#Se añadio 2 métodos nuevos y se modifico el update_mini_batch
 
 
 import random 
@@ -17,6 +17,13 @@ class Network(object):
         self.sizes = sizes  
         self.biases = [np.random.randn(y, 1) for y in sizes[1:]] 
         self.weights = [np.random.randn(y, x) for x, y in zip(sizes[:-1], sizes[1:])]
+    
+    def set_momentum_rate(self, momentum_rate):
+        self.momentum_rate = momentum_rate  # Define el momentum rate
+    
+    def initialize_velocities(self):
+        self.v_w = [np.zeros(w.shape) for w in self.weights]  # Inicializa la velocidad para los pesos
+        self.v_b = [np.zeros(b.shape) for b in self.biases]  # Inicializa la velocidad para los sesgos
 
  
 
@@ -48,15 +55,21 @@ class Network(object):
                 print("Epoch {0} complete".format(j)) 
 
     def update_mini_batch(self, mini_batch, eta):
-
         nabla_b = [np.zeros(b.shape) for b in self.biases] 
         nabla_w = [np.zeros(w.shape) for w in self.weights] 
         for x, y in mini_batch: 
             delta_nabla_b, delta_nabla_w = self.backprop(x, y)
             nabla_b = [nb+dnb for nb, dnb in zip(nabla_b, delta_nabla_b)]
             nabla_w = [nw+dnw for nw, dnw in zip(nabla_w, delta_nabla_w)]
-        self.weights = [w-(eta/len(mini_batch))*nw for w, nw in zip(self.weights, nabla_w)]
-        self.biases = [b-(eta/len(mini_batch))*nb for b, nb in zip(self.biases, nabla_b)]
+        # Actualización de las velocidades con momentum
+        self.v_w = [self.momentum_rate * v_w - (eta / len(mini_batch)) * nw  # Actualiza la velocidad de los pesos
+                    for v_w, nw in zip(self.v_w, nabla_w)]
+        self.v_b = [self.momentum_rate * v_b - (eta / len(mini_batch)) * nb  # Actualiza la velocidad de los sesgos
+                    for v_b, nb in zip(self.v_b, nabla_b)]
+        # Actualización de pesos y sesgos utilizando las velocidades de cambio
+        self.weights = [w + v_w for w, v_w in zip(self.weights, self.v_w)]  # Actualiza los pesos con las velocidades
+        self.biases = [b + v_b for b, v_b in zip(self.biases, self.v_b)]  # Actualiza los sesgos con las velocidades
+
 
     def backprop(self, x, y):
 

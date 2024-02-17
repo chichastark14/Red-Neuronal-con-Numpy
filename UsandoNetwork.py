@@ -1,17 +1,18 @@
 #Moreno Santiago José Miguel
-#Fecha: 26 de febrero del 2024
-#Actualización: Dejamos solo la libreri pickle y conservamoe el exit en su lugar
-
+#Fecha: 17 de febrero del 2024
+#Actualización: LLamamos los nuevos métodos que son fundamentales para SGD
 
 import mnist_loader
 import network
 import pickle #Importamos esta librería, tras ejecutar el codigo vimos que daba error por falta de esta libreria
-from PIL import Image
 
 training_data , test_data, _ = mnist_loader.load_data_wrapper()
 
 net = network.Network([784, 30, 10])
-net.SGD(training_data, 30, 10, 0.01, test_data=test_data)
+net.set_momentum_rate(0.9)
+net.initialize_velocities()
+net.SGD(training_data, 90, 10, 0.01, test_data=test_data)
+
 
 exit() 
 
